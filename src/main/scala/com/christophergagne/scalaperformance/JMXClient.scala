@@ -14,8 +14,8 @@ object JMXClient extends Logging {
 
   class PerfCounters(val name: String) extends PerfCountersMBean{
     val mbs = ManagementFactory.getPlatformMBeanServer()
-    val objectName = new ObjectName(s"${name}:type=Performance")
-    mbs.registerMBean(this, objectName);
+    val objectName = new ObjectName(s"SampleApp:type='${name}'")
+    mbs.registerMBean(this, objectName)
 	}
 
   trait PerfCountersMBean {

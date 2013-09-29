@@ -14,7 +14,12 @@ abstract class ScalaMonitor extends Logging {
 		val startTime = currentTime
 		jp.proceed()
 		val endTime = currentTime
-		// JMXClient.recordExecution(jp.getSignature().toString(), startTime, endTime)
-		logger.info(s"type=perf elapsedTime: ${endTime-startTime}, ${jp.getSignature()}")
+  	
+    // val current = Thread.currentThread
+    // val stack = current.getStackTrace()
+    // for(stackElement <- stack){
+    //   logger.debug(stackElement.toString)
+    // }
+		JMXClient.recordExecution(jp.getTarget.getClass.getName.toString, startTime, endTime)
 	}
 }
