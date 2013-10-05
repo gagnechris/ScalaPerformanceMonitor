@@ -4,39 +4,35 @@ import org.aspectj.lang.annotation._
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.weaver.tools.JoinPointMatch
 
-import com.typesafe.scalalogging.slf4j.Logging
-import java.text.SimpleDateFormat
-import java.util.TimeZone
+import akka.actor.{ActorSystem, Props}
 
 @Aspect
-abstract class ScalaMonitor extends Logging {
-  val curTimeFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ")
-  curTimeFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+abstract class ScalaMonitor {
+  import PerfLoggingActor._
+
+  implicit val system = ActorSystem("perf-logging-system")
+  val perfLoggingActor = system.actorOf(Props[PerfLoggingActor], "perf-logging-actor")
 
   @Around(value = "methodPerformancePointcut()")
   def logMethodPerformance(jp: ProceedingJoinPoint) = {
     val startTime = System.currentTimeMillis()
-    val startTimeString = curTimeFormat.format(startTime)
+
     jp.proceed()
+
     val endTime = System.currentTimeMillis()
-    val endTimeString = curTimeFormat.format(endTime)
-    val duration = endTime - startTime
-    val methodString = jp.toLongString()
-    
-    logger.info(s"method=$methodString, start=$endTimeString, end=$startTimeString, duration=$duration")
+
+    perfLoggingActor ! LogMethodDuration(new LogObject(jp.toLongString(), startTime, endTime))
   }
 
 	@Around(value = "methodPerformancePointcutWithReturn()")
 	def logMethodPerformanceWithReturn(jp: ProceedingJoinPoint) = {
-		val startTime = System.currentTimeMillis()
-    val startTimeString = curTimeFormat.format(startTime)
-		val result = jp.proceed()
-		val endTime = System.currentTimeMillis()
-    val endTimeString = curTimeFormat.format(endTime)
-    val duration = endTime - startTime
-    val methodString = jp.toLongString()
+    val startTime = System.currentTimeMillis()
 
-  	logger.info(s"method=$methodString, start=$endTimeString, end=$startTimeString, duration=$duration")
+    val result = jp.proceed()
+
+    val endTime = System.currentTimeMillis()
+
+    perfLoggingActor ! LogMethodDuration(new LogObject(jp.toLongString(), startTime, endTime))
     result
 	}
 }

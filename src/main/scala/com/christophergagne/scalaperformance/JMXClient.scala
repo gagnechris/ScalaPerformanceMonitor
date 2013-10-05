@@ -3,9 +3,7 @@ package com.christophergagne.scalaperformance
 import javax.management._
 import java.lang.management.ManagementFactory
 
-import com.typesafe.scalalogging.slf4j.Logging
-
-object JMXClient extends Logging {
+object JMXClient {
   var perfCounterMap = collection.mutable.Map[String, PerfCounters]()
 
   def recordExecution(monitorName: String, start: Long, end: Long) {
